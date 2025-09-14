@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Singer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin-bottom: 10px;
+            padding: 10px;
+            font-size: 16px;
+        }
+        select, button {
+            padding: 10px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #stopBtn {
+            background-color: #f44336;
+        }
+        #stopBtn:hover {
+            background-color: #da190b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Virtual Singer</h2>
+        <textarea id="lyricsInput" placeholder="Enter lyrics to sing..."></textarea>
+        <div>
+            <label for="pitchSelect">Select Pitch: </label>
+            <select id="pitchSelect">
+                <option value="0.8">Low</option>
+                <option value="1.0" selected>Normal</option>
+                <option value="1.2">High</option>
+                <option value="1.5">Very High</option>
+            </select>
+        </div>
+        <button onclick="singLyrics()">Sing</button>
+        <button id="stopBtn" onclick="stopSinging()">Stop</button>
+    </div>
+
+    <script>
+        let utterance = null;
+
+        function singLyrics() {
+            const lyrics = document.getElementById('lyricsInput').value;
+            const pitch = parseFloat(document.getElementById('pitchSelect').value);
+
+            if (!lyrics) {
+                alert('Please enter some lyrics!');
+                return;
+            }
+
+            // Stop any ongoing speech
+            stopSinging();
+
+            // Create a new speech synthesis utterance
+            utterance = new SpeechSynthesisUtterance(lyrics);
+            utterance.pitch = pitch; // Adjust pitch for singing effect
+            utterance.rate = 0.9;   // Slightly slower for clarity
+            utterance.volume = 1.0;
+
+            // Attempt to use a natural-sounding voice
+            const voices = speechSynthesis.getVoices();
+            const naturalVoice = voices.find(voice => voice.name.includes('Google') || voice.name.includes('Natural') || voice.lang.includes('en'));
+            if (naturalVoice) {
+                utterance.voice = naturalVoice;
+            }
+
+            // Play the utterance
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function stopSinging() {
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+            }
+            utterance = null;
+        }
+
+        // Ensure voices are loaded (some browsers load them asynchronously)
+        window.speechSynthesis.onvoiceschanged = () => {
+            const voices = speechSynthesis.getVoices();
+        };
+    </script>
+</body>
+</html>
