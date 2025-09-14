@@ -1,0 +1,323 @@
+import React, { useState, useEffect, useRef } from ‘react’;
+import * as Tone from ‘tone’;
+
+const MelodyMaker = () => {
+const [isPlaying, setIsPlaying] = useState(false);
+const [currentStep, setCurrentStep] = useState(0);
+const [bpm, setBpm] = useState(120);
+const [selectedInstrument, setSelectedInstrument] = useState(‘synth’);
+const [scale, setScale] = useState(‘major’);
+const [key, setKey] = useState(‘C’);
+const [pattern, setPattern] = useState(Array(16).fill(null));
+const [isInitialized, setIsInitialized] = useState(false);
+
+const synthRef = useRef(null);
+const sequenceRef = useRef(null);
+const patternRef = useRef(null);
+
+// Note mappings for different scales
+const scales = {
+major: [0, 2, 4, 5, 7, 9, 11],
+minor: [0, 2, 3, 5, 7, 8, 10],
+pentatonic: [0, 2, 4, 7, 9],
+blues: [0, 3, 5, 6, 7, 10]
+};
+
+const noteNames = [‘C’, ‘C#’, ‘D’, ‘D#’, ‘E’, ‘F’, ‘F#’, ‘G’, ‘G#’, ‘A’, ‘A#’, ‘B’];
+
+const getNote = (keyNote, scaleType, degree, octave = 4) => {
+const keyIndex = noteNames.indexOf(keyNote);
+const scaleIntervals = scales[scaleType];
+const noteIndex = (keyIndex + scaleIntervals[degree % scaleIntervals.length]) % 12;
+const finalOctave = octave + Math.floor((keyIndex + scaleIntervals[degree % scaleIntervals.length]) / 12);
+return noteNames[noteIndex] + finalOctave;
+};
+
+// Initialize audio context and instruments
+const initializeAudio = async () => {
+if (isInitialized) return;
+
+```
+try {
+  await Tone.start();
+  
+  // Create different instruments
+  const instruments = {
+    synth: new Tone.Synth({
+      oscillator: { type: 'triangle' },
+      envelope: { attack: 0.1, decay: 0.2, sustain: 0.3, release: 0.8 }
+    }).toDestination(),
+    
+    fmSynth: new Tone.FMSynth({
+      harmonicity: 3,
+      modulationIndex: 10,
+      detune: 0,
+      oscillator: { type: 'sine' },
+      envelope: { attack: 0.01, decay: 0.01, sustain: 1, release: 0.5 },
+      modulation: { type: 'square' },
+      modulationEnvelope: { attack: 0.5, decay: 0.2, sustain: 0, release: 0.5 }
+    }).toDestination(),
+    
+    pluck: new Tone.PluckSynth({
+      attackNoise: 1,
+      dampening: 4000,
+      resonance: 0.7
+    }).toDestination(),
+    
+    membrane: new Tone.MembraneSynth({
+      pitchDecay: 0.05,
+      octaves: 10,
+      oscillator: { type: 'sine' },
+      envelope: { attack: 0.001, decay: 0.4, sustain: 0.01, release: 1.4 }
+    }).toDestination(),
+    
+    piano: new Tone.Synth({
+      oscillator: { type: 'triangle' },
+      envelope: { attack: 0.02, decay: 0.1, sustain: 0.3, release: 1.2 }
+    }).toDestination()
+  };
+  
+  synthRef.current = instruments;
+  setIsInitialized(true);
+} catch (error) {
+  console.error('Failed to initialize audio:', error);
+}
+```
+
+};
+
+// Update pattern in grid
+const updatePattern = (step, note) => {
+const newPattern = […pattern];
+newPattern[step] = newPattern[step] === note ? null : note;
+setPattern(newPattern);
+patternRef.current = newPattern;
+};
+
+// Generate random melody
+const generateRandomMelody = () => {
+const newPattern = Array(16).fill(null);
+const scaleNotes = scales[scale];
+
+```
+for (let i = 0; i < 16; i++) {
+  if (Math.random() > 0.3) { // 70% chance of having a note
+    const degree = Math.floor(Math.random() * scaleNotes.length);
+    const octave = 3 + Math.floor(Math.random() * 2); // Octave 3 or 4
+    newPattern[i] = { degree, octave };
+  }
+}
+setPattern(newPattern);
+patternRef.current = newPattern;
+```
+
+};
+
+// Clear pattern
+const clearPattern = () => {
+const newPattern = Array(16).fill(null);
+setPattern(newPattern);
+patternRef.current = newPattern;
+};
+
+// Play/Stop functionality
+const togglePlayback = async () => {
+if (!isInitialized) {
+await initializeAudio();
+}
+
+```
+if (isPlaying) {
+  Tone.Transport.stop();
+  if (sequenceRef.current) {
+    sequenceRef.current.dispose();
+  }
+  setIsPlaying(false);
+  setCurrentStep(0);
+} else {
+  Tone.Transport.bpm.value = bpm;
+  
+  sequenceRef.current = new Tone.Sequence((time, step) => {
+    setCurrentStep(step);
+    const note = patternRef.current[step];
+    if (note && synthRef.current) {
+      const noteName = getNote(key, scale, note.degree, note.octave);
+      synthRef.current[selectedInstrument].triggerAttackRelease(noteName, '8n', time);
+    }
+  }, Array.from({length: 16}, (_, i) => i), '16n');
+  
+  sequenceRef.current.start(0);
+  Tone.Transport.start();
+  setIsPlaying(true);
+}
+```
+
+};
+
+// Update pattern reference when pattern changes
+useEffect(() => {
+patternRef.current = pattern;
+}, [pattern]);
+
+// Update BPM
+useEffect(() => {
+if (isPlaying) {
+Tone.Transport.bpm.value = bpm;
+}
+}, [bpm, isPlaying]);
+
+return (
+<div className="p-6 max-w-4xl mx-auto bg-gray-900 text-white rounded-lg">
+<h1 className="text-3xl font-bold mb-6 text-center">Interactive Melody Maker</h1>
+
+```
+  {/* Controls */}
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div>
+      <label className="block text-sm font-medium mb-2">Instrument</label>
+      <select 
+        value={selectedInstrument} 
+        onChange={(e) => setSelectedInstrument(e.target.value)}
+        className="w-full p-2 bg-gray-700 rounded"
+      >
+        <option value="synth">Synth</option>
+        <option value="fmSynth">FM Synth</option>
+        <option value="pluck">Pluck</option>
+        <option value="membrane">Bass</option>
+        <option value="piano">Piano</option>
+      </select>
+    </div>
+    
+    <div>
+      <label className="block text-sm font-medium mb-2">Key</label>
+      <select 
+        value={key} 
+        onChange={(e) => setKey(e.target.value)}
+        className="w-full p-2 bg-gray-700 rounded"
+      >
+        {noteNames.map(note => (
+          <option key={note} value={note}>{note}</option>
+        ))}
+      </select>
+    </div>
+    
+    <div>
+      <label className="block text-sm font-medium mb-2">Scale</label>
+      <select 
+        value={scale} 
+        onChange={(e) => setScale(e.target.value)}
+        className="w-full p-2 bg-gray-700 rounded"
+      >
+        <option value="major">Major</option>
+        <option value="minor">Minor</option>
+        <option value="pentatonic">Pentatonic</option>
+        <option value="blues">Blues</option>
+      </select>
+    </div>
+    
+    <div>
+      <label className="block text-sm font-medium mb-2">BPM: {bpm}</label>
+      <input
+        type="range"
+        min="60"
+        max="180"
+        value={bpm}
+        onChange={(e) => setBpm(parseInt(e.target.value))}
+        className="w-full"
+      />
+    </div>
+  </div>
+
+  {/* Transport Controls */}
+  <div className="flex gap-4 mb-6 justify-center">
+    <button
+      onClick={togglePlayback}
+      className={`px-6 py-2 rounded font-medium ${
+        isPlaying ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'
+      }`}
+    >
+      {isPlaying ? '⏹ Stop' : '▶ Play'}
+    </button>
+    
+    <button
+      onClick={generateRandomMelody}
+      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded font-medium"
+    >
+      🎲 Random
+    </button>
+    
+    <button
+      onClick={clearPattern}
+      className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded font-medium"
+    >
+      🗑 Clear
+    </button>
+  </div>
+
+  {/* Pattern Grid */}
+  <div className="mb-6">
+    <h3 className="text-lg font-medium mb-3">Melody Pattern (16 steps)</h3>
+    <div className="grid grid-cols-16 gap-1 mb-4">
+      {Array.from({length: 16}, (_, step) => (
+        <div
+          key={step}
+          className={`h-8 rounded text-xs flex items-center justify-center font-medium border-2 ${
+            currentStep === step && isPlaying 
+              ? 'border-yellow-400 bg-yellow-600' 
+              : 'border-gray-600 bg-gray-700'
+          }`}
+        >
+          {step + 1}
+        </div>
+      ))}
+    </div>
+    
+    {/* Note grid for each octave */}
+    {[4, 3].map(octave => (
+      <div key={octave} className="mb-2">
+        <div className="text-sm text-gray-400 mb-1">Octave {octave}</div>
+        {scales[scale].map((_, degree) => (
+          <div key={`${octave}-${degree}`} className="grid grid-cols-16 gap-1 mb-1">
+            {Array.from({length: 16}, (_, step) => {
+              const isActive = pattern[step] && pattern[step].degree === degree && pattern[step].octave === octave;
+              const noteName = getNote(key, scale, degree, octave);
+              
+              return (
+                <button
+                  key={step}
+                  onClick={() => updatePattern(step, { degree, octave })}
+                  className={`h-8 rounded text-xs font-medium transition-colors ${
+                    isActive 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-600 hover:bg-gray-500 text-gray-300'
+                  } ${currentStep === step && isPlaying ? 'ring-2 ring-yellow-400' : ''}`}
+                  title={`${noteName} - Step ${step + 1}`}
+                >
+                  {isActive ? noteName.replace(/\d/, '') : ''}
+                </button>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    ))}
+  </div>
+
+  {/* Instructions */}
+  <div className="text-sm text-gray-400 bg-gray-800 p-4 rounded">
+    <h4 className="font-medium mb-2">How to use:</h4>
+    <ul className="space-y-1">
+      <li>• Click grid cells to add/remove notes in your melody</li>
+      <li>• Choose different instruments, keys, and scales</li>
+      <li>• Use "Random" to generate ideas, "Clear" to start over</li>
+      <li>• Adjust BPM for faster or slower playback</li>
+      <li>• Yellow highlight shows current playback position</li>
+    </ul>
+  </div>
+</div>
+```
+
+);
+};
+
+export default MelodyMaker;
