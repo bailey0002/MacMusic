@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NDA Provision Mapping Template</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        h1 {
+            margin: 0 0 10px 0;
+        }
+        .subtitle {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background: #5568d3;
+        }
+        .btn-secondary {
+            background: #48bb78;
+        }
+        .btn-secondary:hover {
+            background: #38a169;
+        }
+        table {
+            width: 100%;
+            background: white;
+            border-collapse: collapse;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        th {
+            background: #4a5568;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        tr:hover {
+            background: #f7fafc;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        .category {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .cat-definition { background: #e6fffa; color: #234e52; }
+        .cat-obligations { background: #fef5e7; color: #7d6608; }
+        .cat-liability { background: #fce4ec; color: #880e4f; }
+        .cat-duration { background: #e3f2fd; color: #0d47a1; }
+        .cat-dispute { background: #f3e5f5; color: #4a148c; }
+        .cat-misc { background: #f5f5f5; color: #424242; }
+        .risk-high { color: #c53030; font-weight: 600; }
+        .risk-medium { color: #dd6b20; font-weight: 600; }
+        .risk-low { color: #38a169; font-weight: 600; }
+        .instructions {
+            background: #edf2f7;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #2d3748;
+        }
+        .instructions ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin: 8px 0;
+            color: #4a5568;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-label {
+            color: #718096;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ConfiDoc: NDA Provision Mapping</h1>
+        <div class="subtitle">Phase 1: Building Your Benchmark Engine Foundation</div>
+    </div>
+
+```
+<div class="instructions">
+    <h3>📋 How to Document Your First 3-5 Provisions</h3>
+    <ol>
+        <li><strong>Pick a provision type</strong> from a real NDA you've reviewed (e.g., "Confidential Information Definition")</li>
+        <li><strong>Click "Add New Provision"</strong> below to create a row</li>
+        <li><strong>Fill in each column:</strong>
+            <ul>
+                <li><strong>Provision Name:</strong> What you call it (e.g., "Broad CI Definition")</li>
+                <li><strong>Category:</strong> High-level grouping (Definition, Obligations, Liability, etc.)</li>
+                <li><strong>Description:</strong> What this provision does in plain English</li>
+                <li><strong>Bank-Favorable Language:</strong> The wording you prefer to see</li>
+                <li><strong>Counterparty-Favorable:</strong> Wording that concerns you</li>
+                <li><strong>Why It Matters:</strong> Business/legal risk if done wrong</li>
+                <li><strong>Risk Level:</strong> High/Medium/Low based on your experience</li>
+            </ul>
+        </li>
+        <li><strong>Start with familiar provisions</strong> - the ones you review most often</li>
+        <li><strong>Export when done</strong> to save your work as CSV</li>
+    </ol>
+</div>
+
+<div class="stats">
+    <div class="stat-card">
+        <div class="stat-number" id="totalCount">0</div>
+        <div class="stat-label">Total Provisions</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number" id="highRiskCount">0</div>
+        <div class="stat-label">High Risk Items</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number" id="categoryCount">0</div>
+        <div class="stat-label">Categories Covered</div>
+    </div>
+</div>
+
+<div class="controls">
+    <button class="btn" onclick="addProvision()">+ Add New Provision</button>
+    <button class="btn btn-secondary" onclick="exportCSV()">⬇️ Export to CSV</button>
+    <button class="btn btn-secondary" onclick="loadExample()">📝 Load Example Provision</button>
+</div>
+
+<table id="provisionTable">
+    <thead>
+        <tr>
+            <th style="width: 150px;">Provision Name</th>
+            <th style="width: 120px;">Category</th>
+            <th style="width: 200px;">Description</th>
+            <th style="width: 200px;">Bank-Favorable Language</th>
+            <th style="width: 200px;">Counterparty-Favorable</th>
+            <th style="width: 180px;">Why It Matters</th>
+            <th style="width: 100px;">Risk Level</th>
+            <th style="width: 60px;">Actions</th>
+        </tr>
+    </thead>
+    <tbody id="provisionBody">
+    </tbody>
+</table>
+
+<script>
+    let provisions = [];
+
+    function updateStats() {
+        document.getElementById('totalCount').textContent = provisions.length;
+        const highRisk = provisions.filter(p => p.risk === 'High').length;
+        document.getElementById('highRiskCount').textContent = highRisk;
+        const uniqueCategories = new Set(provisions.map(p => p.category).filter(c => c));
+        document.getElementById('categoryCount').textContent = uniqueCategories.size;
+    }
+
+    function addProvision() {
+        const provision = {
+            id: Date.now(),
+            name: '',
+            category: '',
+            description: '',
+            bankFavorable: '',
+            counterpartyFavorable: '',
+            whyMatters: '',
+            risk: 'Medium'
+        };
+        provisions.push(provision);
+        renderTable();
+        updateStats();
+    }
+
+    function loadExample() {
+        const example = {
+            id: Date.now(),
+            name: 'Broad CI Definition',
+            category: 'Definition',
+            description: 'Defines what information is considered "Confidential Information" under the NDA',
+            bankFavorable: '"Confidential Information" means any non-public information disclosed by Disclosing Party, marked as confidential or reasonably understood to be confidential given the nature of the information and circumstances of disclosure.',
+            counterpartyFavorable: '"Confidential Information" means all information disclosed in any form, whether or not marked confidential, including all derivatives, analyses, and compilations thereof.',
+            whyMatters: 'Overly broad definitions can inadvertently capture publicly available information or independently developed data, exposing the bank to breach claims.',
+            risk: 'High'
+        };
+        provisions.push(example);
+        renderTable();
+        updateStats();
+    }
+
+    function deleteProvision(id) {
+        if (confirm('Delete this provision?')) {
+            provisions = provisions.filter(p => p.id !== id);
+            renderTable();
+            updateStats();
+        }
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('provisionBody');
+        tbody.innerHTML = '';
+
+        provisions.forEach(prov => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><input type="text" value="${prov.name}" onchange="updateProvision(${prov.id}, 'name', this.value)" placeholder="Enter provision name"></td>
+                <td>
+                    <select onchange="updateProvision(${prov.id}, 'category', this.value)">
+                        <option value="">Select...</option>
+                        <option value="Definition" ${prov.category === 'Definition' ? 'selected' : ''}>Definition</option>
+                        <option value="Obligations" ${prov.category === 'Obligations' ? 'selected' : ''}>Obligations</option>
+                        <option value="Liability" ${prov.category === 'Liability' ? 'selected' : ''}>Liability</option>
+                        <option value="Duration" ${prov.category === 'Duration' ? 'selected' : ''}>Duration & Term</option>
+                        <option value="Dispute" ${prov.category === 'Dispute' ? 'selected' : ''}>Dispute Resolution</option>
+                        <option value="Misc" ${prov.category === 'Misc' ? 'selected' : ''}>Miscellaneous</option>
+                    </select>
+                </td>
+                <td><textarea onchange="updateProvision(${prov.id}, 'description', this.value)" placeholder="What does this provision do?">${prov.description}</textarea></td>
+                <td><textarea onchange="updateProvision(${prov.id}, 'bankFavorable', this.value)" placeholder="Language you prefer">${prov.bankFavorable}</textarea></td>
+                <td><textarea onchange="updateProvision(${prov.id}, 'counterpartyFavorable', this.value)" placeholder="Language that concerns you">${prov.counterpartyFavorable}</textarea></td>
+                <td><textarea onchange="updateProvision(${prov.id}, 'whyMatters', this.value)" placeholder="Business/legal risk">${prov.whyMatters}</textarea></td>
+                <td>
+                    <select onchange="updateProvision(${prov.id}, 'risk', this.value)">
+                        <option value="Low" ${prov.risk === 'Low' ? 'selected' : ''}>Low</option>
+                        <option value="Medium" ${prov.risk === 'Medium' ? 'selected' : ''}>Medium</option>
+                        <option value="High" ${prov.risk === 'High' ? 'selected' : ''}>High</option>
+                    </select>
+                </td>
+                <td><button class="btn" style="padding: 5px 10px; font-size: 12px;" onclick="deleteProvision(${prov.id})">🗑️</button></td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function updateProvision(id, field, value) {
+        const provision = provisions.find(p => p.id === id);
+        if (provision) {
+            provision[field] = value;
+            updateStats();
+        }
+    }
+
+    function exportCSV() {
+        if (provisions.length === 0) {
+            alert('Add at least one provision before exporting!');
+            return;
+        }
+
+        const headers = ['Provision Name', 'Category', 'Description', 'Bank-Favorable Language', 
+                        'Counterparty-Favorable', 'Why It Matters', 'Risk Level'];
+        
+        const csvContent = [
+            headers.join(','),
+            ...provisions.map(p => [
+                `"${p.name}"`,
+                `"${p.category}"`,
+                `"${p.description}"`,
+                `"${p.bankFavorable}"`,
+                `"${p.counterpartyFavorable}"`,
+                `"${p.whyMatters}"`,
+                `"${p.risk}"`
+            ].join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ConfiDoc_Provision_Mapping_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+
+    updateStats();
+</script>
+```
+
+</body>
+</html>
