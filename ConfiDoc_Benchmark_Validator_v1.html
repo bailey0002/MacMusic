@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Benchmark Validator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        h1 { margin: 0 0 10px 0; }
+        .subtitle { opacity: 0.9; font-size: 14px; }
+
+        .test-scenario {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .scenario-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .scenario-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2d3748;
+        }
+        .scenario-id {
+            font-size: 12px;
+            color: #718096;
+        }
+        
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .input-section {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 3px solid #4299e1;
+        }
+        .input-section h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #2c5282;
+        }
+        .provision-text {
+            background: white;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #2d3748;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .algorithm-output {
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 3px solid #667eea;
+        }
+        .algorithm-output h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #434190;
+        }
+        
+        .check-item {
+            background: white;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            display: flex;
+            align-items: start;
+            gap: 10px;
+        }
+        .check-icon {
+            font-size: 16px;
+            margin-top: 2px;
+        }
+        .check-pass { color: #38a169; }
+        .check-fail { color: #e53e3e; }
+        .check-warn { color: #dd6b20; }
+        
+        .check-label {
+            font-weight: 600;
+            font-size: 12px;
+            color: #4a5568;
+        }
+        .check-detail {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 4px;
+        }
+        
+        .suggested-action {
+            background: #fef5e7;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 3px solid #f59e0b;
+            margin-top: 15px;
+        }
+        .suggested-action h4 {
+            margin: 0 0 10px 0;
+            font-size: 13px;
+            color: #7c2d12;
+        }
+        .action-text {
+            font-size: 13px;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+        
+        .feedback-section {
+            background: #e6fffa;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 3px solid #38b2ac;
+            margin-top: 20px;
+        }
+        .feedback-section h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #234e52;
+        }
+        
+        .feedback-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .btn:hover { background: #5568d3; }
+        .btn-success { background: #38a169; }
+        .btn-success:hover { background: #2f855a; }
+        .btn-warning { background: #dd6b20; }
+        .btn-warning:hover { background: #c05621; }
+        
+        .refinement-input {
+            display: none;
+            margin-top: 15px;
+        }
+        .refinement-input.active {
+            display: block;
+        }
+        
+        textarea.refinement {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e0;
+            border-radius: 5px;
+            font-size: 13px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .rule-modification {
+            background: #fff5f5;
+            padding: 12px;
+            border-radius: 4px;
+            border-left: 3px solid #e53e3e;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+        .rule-modification strong {
+            color: #742a2a;
+        }
+        
+        .examples-box {
+            background: #f0fff4;
+            padding: 12px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #22543d;
+        }
+        
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .nav-info {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        @media (max-width: 900px) {
+            .two-column { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ConfiDoc: Benchmark Rule Validator</h1>
+        <div class="subtitle">Test your benchmark logic with real NDA scenarios → Refine rules through natural language feedback</div>
+    </div>
+
+    <div class="controls">
+        <div class="nav-info">
+            <strong>Scenario <span id="currentScenario">1</span> of <span id="totalScenarios">5</span></strong>
+            <span style="margin-left: 20px;">Provision: <strong id="currentProvisionName">Non-Solicitation</strong></span>
+        </div>
+        <div>
+            <button class="btn" onclick="prevScenario()">← Previous</button>
+            <button class="btn" onclick="nextScenario()">Next →</button>
+            <button class="btn btn-success" onclick="exportRefinements()" style="margin-left: 20px;">⬇️ Export Rule Updates</button>
+        </div>
+    </div>
+
+    <div id="scenarioContainer"></div>
+
+    <script>
+        let currentIndex = 0;
+        
+        const scenarios = [
+            {
+                provision: 'Non-Solicitation',
+                provisionId: 'NDA-AUTO-042',
+                actualLanguage: 'Recipient shall not, for a period of three (3) years, directly or indirectly hire, solicit, or employ any employee, consultant, or contractor of Company.',
+                presencePolicy: 'Prohibit',
+                checks: [
+                    { pass: false, label: 'Presence Check', detail: 'Provision should not be in NDA (Policy: PROHIBIT). Escalation required.' },
+                    { pass: false, label: 'Duration', detail: 'Found: 3 years. Maximum: 2 years. PROHIBITED: Multi-year >2 years.' },
+                    { pass: false, label: 'Scope Limitation', detail: 'Missing: Limited to employees with contact. REQUIRED if present.' },
+                    { pass: false, label: 'General Solicitation Carve-Out', detail: 'Missing: Exception for general solicitations. REQUIRED if present.' },
+                    { pass: false, label: 'Employee-Initiated Contact', detail: 'Missing: Exception for employee-initiated contact. REQUIRED if present.' }
+                ],
+                suggestedAction: 'DELETE entire provision (first instance resistance). If customer insists: Escalate per Stratum §8 (LOB Counsel → Business Lead + Deputy GC → CLO). If forced to accept: Redline with Preferred Approach #1 limiting to "employees with contact" + 2-year cap + standard carve-outs.',
+                feedback: null,
+                refinement: null
+            },
+            {
+                provision: 'Non-Solicitation',
+                provisionId: 'NDA-AUTO-042',
+                actualLanguage: 'For 18 months from the date hereof, Recipient shall not solicit any officer or director of Company with whom Recipient had material contact during evaluation; provided this shall not apply to general advertisements or employee-initiated contact.',
+                presencePolicy: 'Prohibit',
+                checks: [
+                    { pass: false, label: 'Presence Check', detail: 'Provision should not be in NDA (Policy: PROHIBIT). However, language meets IF PRESENT minimums.' },
+                    { pass: true, label: 'Duration', detail: 'Found: 18 months. Acceptable range: 12-24 months.' },
+                    { pass: true, label: 'Scope Limitation', detail: 'Limited to "material contact" - acceptable variant of "employees with contact".' },
+                    { pass: true, label: 'General Solicitation Carve-Out', detail: 'Present: "general advertisements".' },
+                    { pass: true, label: 'Employee-Initiated Contact', detail: 'Present: "employee-initiated contact".' }
+                ],
+                suggestedAction: 'RESIST but accept if customer insists. Language meets Preferred Approach #2 standards. No escalation required. NOTIFY: Commercial Legal team and RM (must ensure team compliance).',
+                feedback: null,
+                refinement: null
+            },
+            {
+                provision: 'Permitted Disclosure - Regulators',
+                provisionId: 'NDA-AUTO-053',
+                actualLanguage: 'Recipient may disclose Information if compelled by court order, provided Recipient gives Company 10 business days advance notice to seek protective order.',
+                presencePolicy: 'Require',
+                checks: [
+                    { pass: true, label: 'Presence Check', detail: 'Provision exists (Policy: REQUIRE).' },
+                    { pass: false, label: '"Required" vs "Compelled"', detail: 'Uses "compelled" only. MUST use "required" or add "or required". Higher threshold unacceptable.' },
+                    { pass: false, label: 'Regulatory Examiner Carve-Out', detail: 'Missing: No-notice disclosure to bank examiners. REQUIRED per FRB SR 07-19.' },
+                    { pass: false, label: 'Notice Conditioning', detail: 'Missing: Notice only "if permitted by law/regulation". Unconditional 10-day notice PROHIBITED.' },
+                    { pass: false, label: 'Regulatory Disclosure', detail: 'Missing: "as required by law, regulation" in addition to court orders.' }
+                ],
+                suggestedAction: 'REDLINE to add: (1) "or required" after "compelled", (2) regulatory examiner no-notice carve-out, (3) condition notice on legal permission, (4) broaden to "law, regulation, or legal process". If customer resists regulatory carve-out: ESCALATE to Chief Legal Officer + Chief Administrative Officer (non-negotiable).',
+                feedback: null,
+                refinement: null
+            },
+            {
+                provision: 'Permitted Disclosure - Participants/Syndication',
+                provisionId: 'NDA-AUTO-051',
+                actualLanguage: 'Recipient may not disclose Information to any third parties including potential lenders without prior written consent of Company.',
+                presencePolicy: 'Prefer',
+                checks: [
+                    { pass: false, label: 'Presence Check', detail: 'Provision absent/restrictive (Policy: PREFER). Need syndication disclosure rights.' },
+                    { pass: false, label: 'Participant Disclosure', detail: 'Prohibited: "may not disclose to potential lenders". MUST permit if syndication contemplated.' },
+                    { pass: false, label: 'Rating Agency Disclosure', detail: 'Missing: Rating agency disclosure rights. SHOULD include.' },
+                    { pass: false, label: 'CUSIP Disclosure', detail: 'Missing: CUSIP Service Bureau disclosure. SHOULD include.' }
+                ],
+                suggestedAction: 'ASK BANKER: Is syndication contemplated? If YES: ADD provision permitting disclosure to "actual or prospective assignees, participants, rating agencies, and CUSIP Service Bureau subject to equivalent confidentiality". If customer resists: Explain syndication is core banking business model.',
+                feedback: null,
+                refinement: null
+            },
+            {
+                provision: 'Return/Destruction',
+                provisionId: 'NDA-AUTO-062',
+                actualLanguage: 'Upon request, Recipient shall immediately destroy all Confidential Information including all backup copies and provide written certification within 5 days.',
+                presencePolicy: 'Require',
+                checks: [
+                    { pass: true, label: 'Presence Check', detail: 'Provision exists (Policy: REQUIRE).' },
+                    { pass: false, label: 'Timeline', detail: 'Found: "immediately" + 5-day cert. Minimum: 14 days return/destroy, 30 days cert.' },
+                    { pass: false, label: 'Archival Copy Exception', detail: 'Missing: Right to retain one archival copy. REQUIRED.' },
+                    { pass: false, label: 'Backup Systems Exception', detail: 'Prohibited: "including all backup copies". Modern immutable backups cannot be instantly purged.' },
+                    { pass: false, label: 'Legal Hold Exception', detail: 'Missing: Retention for legal/regulatory requirements. REQUIRED.' }
+                ],
+                suggestedAction: 'REDLINE to: (1) 14-day timeline for return/destroy, (2) 30 days for certificate, (3) add archival copy exception, (4) add "backups retained subject to continuing confidentiality", (5) add legal/regulatory retention exception. Reference: Modern backup systems and regulatory retention mandates.',
+                feedback: null,
+                refinement: null
+            }
+        ];
+
+        function renderScenario() {
+            const scenario = scenarios[currentIndex];
+            const container = document.getElementById('scenarioContainer');
+            
+            const checksHtml = scenario.checks.map(check => {
+                const icon = check.pass ? '✓' : '✗';
+                const iconClass = check.pass ? 'check-pass' : 'check-fail';
+                return `
+                    <div class="check-item">
+                        <div class="check-icon ${iconClass}">${icon}</div>
+                        <div style="flex: 1;">
+                            <div class="check-label">${check.label}</div>
+                            <div class="check-detail">${check.detail}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const passCount = scenario.checks.filter(c => c.pass).length;
+            const failCount = scenario.checks.filter(c => !c.pass).length;
+
+            container.innerHTML = `
+                <div class="test-scenario">
+                    <div class="scenario-header">
+                        <div>
+                            <div class="scenario-title">${scenario.provision}</div>
+                            <div class="scenario-id">${scenario.provisionId} | Presence Policy: ${scenario.presencePolicy}</div>
+                        </div>
+                        <div style="font-size: 14px; color: #718096;">
+                            <span style="color: #38a169;">${passCount} Pass</span> • 
+                            <span style="color: #e53e3e;">${failCount} Fail</span>
+                        </div>
+                    </div>
+
+                    <div class="two-column">
+                        <div class="input-section">
+                            <h3>NDA Language Found</h3>
+                            <div class="provision-text">${scenario.actualLanguage}</div>
+                        </div>
+
+                        <div class="algorithm-output">
+                            <h3>ConfiDoc Analysis (Based on Your Benchmarks)</h3>
+                            ${checksHtml}
+                        </div>
+                    </div>
+
+                    <div class="suggested-action">
+                        <h4>Recommended Action</h4>
+                        <div class="action-text">${scenario.suggestedAction}</div>
+                    </div>
+
+                    <div class="feedback-section">
+                        <h3>Is This Analysis Correct?</h3>
+                        <div class="feedback-buttons">
+                            <button class="btn btn-success" onclick="markCorrect(${currentIndex})">✓ Correct - Algorithm & Guidance Good</button>
+                            <button class="btn btn-warning" onclick="showRefinement(${currentIndex}, 'algorithm')">⚠ Algorithm Wrong</button>
+                            <button class="btn" style="background: #805ad5;" onclick="showRefinement(${currentIndex}, 'guidance')">📝 Algorithm Right, Guidance Needs Work</button>
+                        </div>
+
+                        <div id="refinement-${currentIndex}" class="refinement-input">
+                            <p style="margin: 0 0 10px 0; font-size: 13px; color: #2c7a7b;">
+                                <strong id="refinement-prompt-${currentIndex}">Describe what should change:</strong> Use natural language to explain the correction.
+                            </p>
+                            
+                            <div class="examples-box">
+                                <strong>Example instructions:</strong><br>
+                                <em>For Algorithm Issues:</em><br>
+                                • "Duration check is too strict - 18 months should be acceptable, not flagged"<br>
+                                • "Missing check: Should verify California judicial reference if CA law applies"<br><br>
+                                <em>For Guidance Issues:</em><br>
+                                • "Algorithm correctly flagged 3-year duration, but guidance wrong: Non-solicitation shouldn't have its own term - should reference NDA's overall Term provision and be struck"<br>
+                                • "Check found missing carve-out correctly, but action should say 'Add exception for X' not 'Delete provision'"<br>
+                                • "Escalation path is wrong - should go to Deputy GC first, not CLO"
+                            </div>
+
+                            <textarea id="refinement-text-${currentIndex}" class="refinement" placeholder="Describe the issue..."></textarea>
+                            
+                            <button class="btn" onclick="saveRefinement(${currentIndex})" style="margin-top: 10px;">Save Refinement</button>
+                        </div>
+
+                        ${scenario.refinement ? `
+                            <div class="rule-modification">
+                                <strong>Your Refinement Captured:</strong><br>
+                                ${scenario.refinement}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('currentScenario').textContent = currentIndex + 1;
+            document.getElementById('totalScenarios').textContent = scenarios.length;
+            document.getElementById('currentProvisionName').textContent = scenario.provision;
+        }
+
+        function markCorrect(index) {
+            scenarios[index].feedback = 'correct';
+            scenarios[index].refinement = null;
+            alert('Marked as correct. Algorithm validation recorded.');
+            if (currentIndex < scenarios.length - 1) {
+                nextScenario();
+            }
+        }
+
+        function showRefinement(index, type) {
+            const refinementDiv = document.getElementById(`refinement-${index}`);
+            refinementDiv.classList.add('active');
+            refinementDiv.dataset.type = type;
+            
+            const prompt = document.getElementById(`refinement-prompt-${index}`);
+            if (type === 'algorithm') {
+                prompt.innerHTML = '<strong>What\'s wrong with the algorithm\'s detection logic?</strong>';
+                scenarios[index].refinementType = 'Algorithm Issue';
+            } else {
+                prompt.innerHTML = '<strong>Algorithm detected correctly, but what guidance/action should change?</strong>';
+                scenarios[index].refinementType = 'Guidance Issue';
+            }
+        }
+
+        function saveRefinement(index) {
+            const text = document.getElementById(`refinement-text-${index}`).value.trim();
+            if (!text) {
+                alert('Please describe what should change');
+                return;
+            }
+            scenarios[index].feedback = scenarios[index].refinementType || 'needs_adjustment';
+            scenarios[index].refinement = text;
+            alert('Refinement saved. This will be exported for rule adjustment.');
+            renderScenario();
+        }
+
+        function nextScenario() {
+            if (currentIndex < scenarios.length - 1) {
+                currentIndex++;
+                renderScenario();
+            }
+        }
+
+        function prevScenario() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                renderScenario();
+            }
+        }
+
+        function exportRefinements() {
+            const headers = ['Provision ID', 'Provision Name', 'Scenario Index', 'NDA Language', 'Feedback Type', 'Refinement Type', 'Your Instructions'];
+            
+            const rows = scenarios.map((s, idx) => [
+                s.provisionId,
+                s.provision,
+                idx + 1,
+                s.actualLanguage,
+                s.feedback || 'Not reviewed',
+                s.refinementType || 'N/A',
+                s.refinement || 'N/A'
+            ]);
+
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ConfiDoc_Rule_Refinements_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+
+            alert('Exported! Use this CSV to update your benchmark rules based on your feedback.');
+        }
+
+        renderScenario();
+    </script>
+</body>
+</html>
