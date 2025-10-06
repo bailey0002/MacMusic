@@ -1,0 +1,492 @@
+import React, { useState } from ‘react’;
+import { Upload, FileText, CheckCircle, AlertCircle, AlertTriangle, Download } from ‘lucide-react’;
+
+const ConfiDocEngineSimulator = () => {
+const [ndaText, setNdaText] = useState(’’);
+const [analysisResults, setAnalysisResults] = useState(null);
+const [processing, setProcessing] = useState(false);
+
+// Simulated Standards (from your CSV)
+const standards = [
+{
+id: ‘NDA-STD-001’,
+name: ‘Parties Identification’,
+keywords: [‘party’, ‘parties’, ‘between’, ‘entered into’],
+required: [‘party_a_name’, ‘party_b_name’],
+severity: ‘High’
+},
+{
+id: ‘NDA-STD-007’,
+name: ‘Regulatory Disclosure’,
+keywords: [‘regulator’, ‘examiner’, ‘bank examiner’, ‘required by law’, ‘compelled’],
+required: [‘regulatory_carveout’, ‘no_advance_notice’],
+severity: ‘Medium’
+},
+{
+id: ‘NDA-STD-009’,
+name: ‘Term & Termination’,
+keywords: [‘term’, ‘terminate’, ‘year’, ‘month’, ‘duration’],
+required: [‘termination_date’],
+severity: ‘High’
+}
+];
+
+// Simulated Benchmarks (from your CSV)
+const benchmarks = [
+{
+id: ‘NDA-AUTO-042’,
+name: ‘Non-Solicitation’,
+presencePolicy: ‘Prohibit’,
+keywords: [‘solicit’, ‘hire’, ‘employ’, ‘recruit’, ‘no-hire’],
+ifPresentMinimums: [‘contact_limitation’, ‘general_solicitation_exception’, ‘employee_initiated_exception’],
+ifPresentTolerances: { duration_months: { min: 12, max: 24 } },
+prohibitedPatterns: [‘all employees’, ‘blanket’, ‘contractors’],
+severity: ‘High’,
+escalation: true
+},
+{
+id: ‘NDA-AUTO-053’,
+name: ‘Permitted Disclosure - Regulators’,
+presencePolicy: ‘Require’,
+keywords: [‘disclosure’, ‘regulator’, ‘examiner’, ‘required by law’, ‘compelled’],
+goldLanguage: ‘required by law or regulation’,
+ifPresentMinimums: [‘required_not_just_compelled’, ‘no_advance_notice_regulators’, ‘notice_if_permitted’],
+prohibitedPatterns: [‘advance notice’, ‘prior consent’, ‘10 business days’],
+severity: ‘High’,
+escalation: true
+},
+{
+id: ‘NDA-AUTO-051’,
+name: ‘Syndication Rights’,
+presencePolicy: ‘Prefer’,
+keywords: [‘participant’, ‘assignee’, ‘syndicate’, ‘rating’, ‘CUSIP’],
+ifPresentMinimums: [‘participants’, ‘rating_agencies’, ‘confidential_basis’],
+severity: ‘Medium’
+}
+];
+
+const analyzeNDA = () => {
+setProcessing(true);
+
+```
+setTimeout(() => {
+  const results = {
+    metadata: {
+      timestamp: new Date().toISOString(),
+      documentLength: ndaText.length,
+      processingTime: '847ms'
+    },
+    standardsCompliance: [],
+    benchmarkFindings: [],
+    overallAssessment: {
+      criticalIssues: 0,
+      highSeverity: 0,
+      mediumSeverity: 0,
+      lowSeverity: 0
+    },
+    suggestedChanges: []
+  };
+
+  // Process Standards
+  standards.forEach(standard => {
+    const detection = detectProvision(ndaText, standard.keywords);
+    const compliance = {
+      standardId: standard.id,
+      name: standard.name,
+      present: detection.found,
+      location: detection.location,
+      severity: standard.severity,
+      issues: []
+    };
+
+    if (!detection.found && standard.severity === 'High') {
+      compliance.issues.push(`MISSING: ${standard.name} is required but not found`);
+      results.overallAssessment.criticalIssues++;
+    } else if (detection.found) {
+      // Validate content
+      if (standard.id === 'NDA-STD-007') {
+        if (!ndaText.toLowerCase().includes('bank examiner') && !ndaText.toLowerCase().includes('regulatory examiner')) {
+          compliance.issues.push('Missing bank/regulatory examiner carve-out');
+          results.overallAssessment.highSeverity++;
+        }
+        if (ndaText.toLowerCase().includes('advance notice')) {
+          compliance.issues.push('Impermissible advance notice requirement for regulators');
+          results.overallAssessment.highSeverity++;
+        }
+      }
+    }
+
+    results.standardsCompliance.push(compliance);
+  });
+
+  // Process Benchmarks
+  benchmarks.forEach(benchmark => {
+    const detection = detectProvision(ndaText, benchmark.keywords);
+    const finding = {
+      provisionId: benchmark.id,
+      name: benchmark.name,
+      presencePolicy: benchmark.presencePolicy,
+      found: detection.found,
+      location: detection.location,
+      severity: benchmark.severity,
+      issues: [],
+      recommendedAction: null
+    };
+
+    // Presence Policy Check
+    if (benchmark.presencePolicy === 'Prohibit' && detection.found) {
+      finding.issues.push('PROHIBIT policy: Provision should not exist in NDA');
+      finding.recommendedAction = 'DELETE entire provision. Escalate if customer insists.';
+      results.overallAssessment.criticalIssues++;
+      
+      results.suggestedChanges.push({
+        location: detection.location,
+        changeType: 'delete',
+        currentText: detection.matchedText,
+        severity: 'high',
+        rationale: `${benchmark.name} violates PROHIBIT policy`,
+        ruleReference: benchmark.id
+      });
+    } else if (benchmark.presencePolicy === 'Require' && !detection.found) {
+      finding.issues.push('REQUIRE policy: Provision must exist but is missing');
+      finding.recommendedAction = `ADD ${benchmark.name} provision with standard language`;
+      results.overallAssessment.highSeverity++;
+      
+      results.suggestedChanges.push({
+        location: 'Document End',
+        changeType: 'insert',
+        suggestedText: benchmark.goldLanguage || 'Standard language required',
+        severity: 'high',
+        rationale: `${benchmark.name} is required but missing`,
+        ruleReference: benchmark.id
+      });
+    }
+
+    // If Present checks
+    if (detection.found && benchmark.ifPresentMinimums) {
+      benchmark.ifPresentMinimums.forEach(minimum => {
+        const hasMinimum = checkForPattern(ndaText, detection.location, minimum);
+        if (!hasMinimum) {
+          finding.issues.push(`Missing required element: ${minimum.replace(/_/g, ' ')}`);
+          results.overallAssessment.mediumSeverity++;
+        }
+      });
+    }
+
+    // Prohibited Patterns
+    if (detection.found && benchmark.prohibitedPatterns) {
+      benchmark.prohibitedPatterns.forEach(pattern => {
+        if (ndaText.toLowerCase().includes(pattern.toLowerCase())) {
+          finding.issues.push(`PROHIBITED pattern found: "${pattern}"`);
+          results.overallAssessment.highSeverity++;
+          
+          results.suggestedChanges.push({
+            location: detection.location,
+            changeType: 'modify',
+            currentText: pattern,
+            severity: 'high',
+            rationale: `Prohibited pattern: ${pattern}`,
+            ruleReference: benchmark.id
+          });
+        }
+      });
+    }
+
+    if (finding.issues.length > 0 || finding.found) {
+      results.benchmarkFindings.push(finding);
+    }
+  });
+
+  // Calculate executable status
+  results.overallAssessment.executable = results.overallAssessment.criticalIssues === 0 ? 'with-modifications' : 'no';
+  results.overallAssessment.overallRisk = results.overallAssessment.criticalIssues > 0 ? 'high' : 
+                                          results.overallAssessment.highSeverity > 2 ? 'medium' : 'low';
+
+  setAnalysisResults(results);
+  setProcessing(false);
+}, 1000);
+```
+
+};
+
+const detectProvision = (text, keywords) => {
+const lowerText = text.toLowerCase();
+let matchPosition = -1;
+let matchedKeyword = ‘’;
+
+```
+for (const keyword of keywords) {
+  const pos = lowerText.indexOf(keyword.toLowerCase());
+  if (pos !== -1) {
+    matchPosition = pos;
+    matchedKeyword = keyword;
+    break;
+  }
+}
+
+if (matchPosition === -1) {
+  return { found: false, location: null, matchedText: null };
+}
+
+// Extract context around match
+const start = Math.max(0, matchPosition - 50);
+const end = Math.min(text.length, matchPosition + 200);
+const context = text.substring(start, end);
+
+return {
+  found: true,
+  location: `Character ${matchPosition}`,
+  matchedText: context,
+  keyword: matchedKeyword
+};
+```
+
+};
+
+const checkForPattern = (text, location, pattern) => {
+const searchPatterns = {
+‘contact_limitation’: [‘with whom’, ‘had contact’, ‘material contact’],
+‘general_solicitation_exception’: [‘general solicitation’, ‘general advertisement’, ‘public announcement’],
+‘employee_initiated_exception’: [‘employee-initiated’, ‘employee initiated’, ‘approaches you’],
+‘required_not_just_compelled’: [‘required’, ‘required by law’],
+‘no_advance_notice_regulators’: [‘bank examiner’, ‘regulatory examiner’, ‘without notice’],
+‘notice_if_permitted’: [‘if permitted’, ‘where permitted’, ‘to the extent permitted’]
+};
+
+```
+const patterns = searchPatterns[pattern] || [pattern];
+return patterns.some(p => text.toLowerCase().includes(p.toLowerCase()));
+```
+
+};
+
+const exportResults = () => {
+const json = JSON.stringify(analysisResults, null, 2);
+const blob = new Blob([json], { type: ‘application/json’ });
+const url = URL.createObjectURL(blob);
+const a = document.createElement(‘a’);
+a.href = url;
+a.download = `confidoc-analysis-${Date.now()}.json`;
+a.click();
+};
+
+const loadSample = () => {
+setNdaText(`CONFIDENTIALITY AGREEMENT
+
+This Confidentiality Agreement (the “Agreement”) is entered into as of January 15, 2025 between ABC Corporation, a Delaware corporation (“Company”), and XYZ Bank, a national banking association (“Recipient”).
+
+WHEREAS, Company and Recipient wish to explore a potential financing transaction;
+
+NOW, THEREFORE, the parties agree as follows:
+
+1. Confidential Information. “Confidential Information” means all non-public information disclosed by Company, whether oral or written.
+1. Use of Information. Recipient shall use Confidential Information solely to evaluate the potential transaction.
+1. Non-Solicitation. Recipient shall not, for a period of three (3) years from the date hereof, directly or indirectly hire, solicit, or employ any employee, consultant, or contractor of Company.
+1. Disclosure. Recipient may disclose Confidential Information if compelled by court order, provided Recipient gives Company 10 business days advance notice.
+1. Term. This Agreement shall remain in effect for two (2) years from the Effective Date.
+1. Governing Law. This Agreement shall be governed by the laws of Delaware.`);
+   };
+
+return (
+<div className="w-full max-w-7xl mx-auto p-6 bg-gray-50">
+<div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-8 rounded-lg mb-6">
+<h1 className="text-3xl font-bold mb-2">ConfiDoc Analysis Engine Simulator</h1>
+<p className="text-purple-100">Simulates the exact parsing, analysis, and rule application logic that will run in the Word plugin</p>
+</div>
+
+```
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold text-gray-800">NDA Document Input</h2>
+        <button
+          onClick={loadSample}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+        >
+          Load Sample NDA
+        </button>
+      </div>
+      <textarea
+        value={ndaText}
+        onChange={(e) => setNdaText(e.target.value)}
+        placeholder="Paste NDA text here or click 'Load Sample NDA'..."
+        className="w-full h-96 p-4 border border-gray-300 rounded font-mono text-sm resize-none"
+      />
+      <button
+        onClick={analyzeNDA}
+        disabled={!ndaText || processing}
+        className={`w-full mt-4 px-6 py-3 rounded font-semibold ${
+          !ndaText || processing
+            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            : 'bg-purple-600 text-white hover:bg-purple-700'
+        }`}
+      >
+        {processing ? 'Analyzing...' : 'Run ConfiDoc Analysis'}
+      </button>
+    </div>
+
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <h2 className="text-xl font-bold text-gray-800 mb-4">Analysis Results</h2>
+      {!analysisResults ? (
+        <div className="text-center py-12 text-gray-400">
+          <FileText className="w-16 h-16 mx-auto mb-4 opacity-50" />
+          <p>Run analysis to see results</p>
+        </div>
+      ) : (
+        <div className="space-y-4 max-h-96 overflow-y-auto">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-red-50 p-4 rounded">
+              <div className="text-3xl font-bold text-red-600">{analysisResults.overallAssessment.criticalIssues}</div>
+              <div className="text-sm text-red-800">Critical Issues</div>
+            </div>
+            <div className="bg-orange-50 p-4 rounded">
+              <div className="text-3xl font-bold text-orange-600">{analysisResults.overallAssessment.highSeverity}</div>
+              <div className="text-sm text-orange-800">High Severity</div>
+            </div>
+          </div>
+
+          <div className="bg-gray-50 p-4 rounded">
+            <div className="font-semibold mb-2">Overall Risk: 
+              <span className={`ml-2 ${
+                analysisResults.overallAssessment.overallRisk === 'high' ? 'text-red-600' :
+                analysisResults.overallAssessment.overallRisk === 'medium' ? 'text-orange-600' :
+                'text-green-600'
+              }`}>
+                {analysisResults.overallAssessment.overallRisk.toUpperCase()}
+              </span>
+            </div>
+            <div className="text-sm text-gray-600">
+              Executable: {analysisResults.overallAssessment.executable}
+            </div>
+          </div>
+
+          <button
+            onClick={exportResults}
+            className="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center justify-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Export Results JSON
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
+
+  {analysisResults && (
+    <>
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Standards Compliance</h2>
+        <div className="space-y-3">
+          {analysisResults.standardsCompliance.map((std, idx) => (
+            <div key={idx} className="border-l-4 border-gray-300 pl-4 py-2">
+              <div className="flex items-start gap-2">
+                {std.issues.length === 0 ? (
+                  <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                ) : (
+                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                )}
+                <div className="flex-1">
+                  <div className="font-semibold">{std.name}</div>
+                  <div className="text-sm text-gray-600">{std.standardId} | Severity: {std.severity}</div>
+                  {std.issues.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      {std.issues.map((issue, i) => (
+                        <div key={i} className="text-sm text-red-700 bg-red-50 px-3 py-1 rounded">{issue}</div>
+                      ))}
+                    </div>
+                  )}
+                  {std.location && (
+                    <div className="text-xs text-gray-500 mt-1">Found at: {std.location}</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Benchmark Findings</h2>
+        <div className="space-y-3">
+          {analysisResults.benchmarkFindings.map((finding, idx) => (
+            <div key={idx} className={`border-l-4 pl-4 py-2 ${
+              finding.issues.length > 0 ? 'border-red-400' : 'border-green-400'
+            }`}>
+              <div className="flex items-start gap-2">
+                {finding.issues.length === 0 ? (
+                  <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                ) : finding.severity === 'High' ? (
+                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                ) : (
+                  <AlertTriangle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                )}
+                <div className="flex-1">
+                  <div className="font-semibold">{finding.name}</div>
+                  <div className="text-sm text-gray-600">
+                    {finding.provisionId} | Policy: {finding.presencePolicy} | Severity: {finding.severity}
+                  </div>
+                  {finding.issues.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      {finding.issues.map((issue, i) => (
+                        <div key={i} className={`text-sm px-3 py-1 rounded ${
+                          finding.severity === 'High' ? 'text-red-700 bg-red-50' : 'text-orange-700 bg-orange-50'
+                        }`}>{issue}</div>
+                      ))}
+                    </div>
+                  )}
+                  {finding.recommendedAction && (
+                    <div className="mt-2 text-sm bg-blue-50 text-blue-800 px-3 py-2 rounded">
+                      <strong>Action:</strong> {finding.recommendedAction}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Suggested Tracked Changes</h2>
+        <div className="space-y-3">
+          {analysisResults.suggestedChanges.map((change, idx) => (
+            <div key={idx} className="border border-gray-200 rounded p-4">
+              <div className="flex items-start gap-3">
+                <div className={`px-2 py-1 rounded text-xs font-semibold ${
+                  change.changeType === 'delete' ? 'bg-red-100 text-red-800' :
+                  change.changeType === 'insert' ? 'bg-green-100 text-green-800' :
+                  'bg-blue-100 text-blue-800'
+                }`}>
+                  {change.changeType.toUpperCase()}
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm text-gray-600 mb-2">Location: {change.location}</div>
+                  {change.currentText && (
+                    <div className="bg-red-50 p-2 rounded mb-2 text-sm">
+                      <strong>Current:</strong> {change.currentText}
+                    </div>
+                  )}
+                  {change.suggestedText && (
+                    <div className="bg-green-50 p-2 rounded mb-2 text-sm">
+                      <strong>Suggested:</strong> {change.suggestedText}
+                    </div>
+                  )}
+                  <div className="text-sm text-gray-700">
+                    <strong>Rationale:</strong> {change.rationale}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">Rule: {change.ruleReference}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  )}
+</div>
+```
+
+);
+};
+
+export default ConfiDocEngineSimulator;
