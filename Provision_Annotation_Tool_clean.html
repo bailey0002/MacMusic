@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Provision Annotation Tool</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        h1 { margin: 0 0 10px 0; }
+        .subtitle { opacity: 0.9; font-size: 14px; }
+        .instructions {
+            background: #edf2f7;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        .instructions h3 { margin-top: 0; color: #2d3748; }
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        .btn:hover { background: #5568d3; }
+        .btn-secondary { background: #48bb78; }
+        .btn-secondary:hover { background: #38a169; }
+        .btn-danger { background: #e53e3e; }
+        .btn-danger:hover { background: #c53030; }
+
+
+    .provision-card {
+        background: white;
+        border-radius: 8px;
+        padding: 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .provision-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    .provision-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #2d3748;
+    }
+    .provision-id {
+        font-size: 12px;
+        color: #718096;
+        margin-top: 4px;
+    }
+    
+    .annotation-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    .annotation-field {
+        margin-bottom: 15px;
+    }
+    label {
+        display: block;
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 6px;
+        font-size: 13px;
+    }
+    input[type="text"], select, textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #cbd5e0;
+        border-radius: 5px;
+        font-size: 13px;
+        font-family: inherit;
+    }
+    textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+    
+    .checkbox-group {
+        margin-top: 8px;
+    }
+    .checkbox-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+    .checkbox-item input[type="checkbox"] {
+        width: auto;
+        margin-right: 8px;
+    }
+    .checkbox-item label {
+        margin: 0;
+        font-weight: normal;
+    }
+    
+    .business-rules {
+        background: #fef5e7;
+        padding: 15px;
+        border-radius: 5px;
+        border-left: 3px solid #f59e0b;
+        margin-top: 15px;
+    }
+    .business-rules h4 {
+        margin: 0 0 10px 0;
+        color: #7c2d12;
+        font-size: 14px;
+    }
+    
+    .rule-item {
+        background: white;
+        padding: 10px;
+        margin-bottom: 8px;
+        border-radius: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+    }
+    .rule-text {
+        flex: 1;
+        font-size: 12px;
+        color: #2d3748;
+    }
+    .rule-type {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 3px;
+        font-size: 10px;
+        font-weight: 600;
+        margin-right: 8px;
+    }
+    .rule-required { background: #fecaca; color: #7f1d1d; }
+    .rule-conditional { background: #fef3c7; color: #78350f; }
+    .rule-discretion { background: #dbeafe; color: #1e3a8a; }
+    .rule-business { background: #e9d5ff; color: #581c87; }
+    
+    .add-rule {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+    }
+    .add-rule select {
+        flex: 0 0 150px;
+    }
+    .add-rule input {
+        flex: 1;
+    }
+    
+    .stratum-examples {
+        background: #e6fffa;
+        padding: 15px;
+        border-radius: 5px;
+        border-left: 3px solid #38b2ac;
+        margin-top: 15px;
+        font-size: 12px;
+    }
+    .stratum-examples h4 {
+        margin: 0 0 10px 0;
+        color: #234e52;
+        font-size: 13px;
+    }
+    .example-text {
+        color: #2c7a7b;
+        line-height: 1.6;
+    }
+    
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    .stat-number {
+        font-size: 28px;
+        font-weight: bold;
+        color: #667eea;
+    }
+    .stat-label {
+        color: #718096;
+        font-size: 13px;
+        margin-top: 5px;
+    }
+    
+    .nav-buttons {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+</style>
+
+
+</head>
+<body>
+    <div class="header">
+        <h1>ConfiDoc: Provision Annotation & Business Rules</h1>
+        <div class="subtitle">Capture nuanced decision logic from your Stratum guidance as you review each provision</div>
+    </div>
+
+
+<div class="instructions">
+    <h3>How to Use This Tool</h3>
+    <p>Review each provision from your Benchmark MASTER and annotate with:</p>
+    <ul>
+        <li><strong>Required vs. Optional:</strong> Must this be in every NDA, or only in certain contexts?</li>
+        <li><strong>Conditional Requirements:</strong> E.g., "Required in LENDER Form, discretion in Third-Party Forms"</li>
+        <li><strong>Business Decision Flags:</strong> Does this need banker input? (e.g., syndication plans)</li>
+        <li><strong>Escalation Paths:</strong> When does this require Deputy GC or Chief Legal Officer approval?</li>
+        <li><strong>Stratum-Style Rules:</strong> Capture "if X then Y, unless Z" logic like your guidance doc</li>
+    </ul>
+</div>
+
+<div class="stats">
+    <div class="stat-card">
+        <div class="stat-number" id="totalAnnotated">0</div>
+        <div class="stat-label">Provisions Annotated</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number" id="withBusinessRules">0</div>
+        <div class="stat-label">With Business Rules</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number" id="requireEscalation">0</div>
+        <div class="stat-label">Require Escalation</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number" id="needBankerInput">0</div>
+        <div class="stat-label">Need Banker Input</div>
+    </div>
+</div>
+
+<div class="controls">
+    <button class="btn btn-secondary" onclick="exportAnnotations()">⬇️ Export Annotated Benchmarks</button>
+    <button class="btn" onclick="loadStratumExample()">📋 Load Stratum Example</button>
+    <button class="btn btn-danger" onclick="clearCurrent()">Clear Current</button>
+</div>
+
+<div id="provisionContainer"></div>
+
+<script>
+    let currentIndex = 0;
+    let provisions = [
+        {
+            id: 'NDA-STD-007',
+            name: 'Permitted Disclosure - Regulatory/Legal',
+            category: 'Regulatory Disclosure',
+            severity: 'Medium'
+        },
+        {
+            id: 'NDA-AUTO-053',
+            name: 'Permitted Disclosures — Regulators / Legal Process',
+            category: 'Regulatory Disclosure',
+            severity: 'High'
+        },
+        {
+            id: 'NDA-AUTO-008',
+            name: 'Representatives Definition',
+            category: 'Permitted Recipients',
+            severity: 'Medium'
+        },
+        {
+            id: 'NDA-AUTO-036',
+            name: 'Non-Solicitation/Restrictive Covenants',
+            category: 'Restrictive Covenants',
+            severity: 'High'
+        },
+        {
+            id: 'NDA-AUTO-051',
+            name: 'Permitted Disclosures — Participants / Rating Agencies / CUSIP',
+            category: 'Syndication',
+            severity: 'Medium'
+        }
+    ];
+
+    let annotations = provisions.map(p => ({
+        ...p,
+        requirementType: '',
+        contextualRules: '',
+        businessDecisionFlag: false,
+        needsBankerInput: false,
+        escalationRequired: false,
+        escalationPath: '',
+        businessRules: [],
+        stratumNotes: ''
+    }));
+
+    function renderProvision() {
+        const prov = annotations[currentIndex];
+        const container = document.getElementById('provisionContainer');
+        
+        container.innerHTML = `
+            <div class="provision-card">
+                <div class="provision-header">
+                    <div>
+                        <div class="provision-title">${prov.name}</div>
+                        <div class="provision-id">${prov.id} | Category: ${prov.category} | Severity: ${prov.severity}</div>
+                    </div>
+                    <div>Provision ${currentIndex + 1} of ${provisions.length}</div>
+                </div>
+
+                <div class="annotation-section">
+                    <div>
+                        <div class="annotation-field">
+                            <label>Requirement Type</label>
+                            <select id="requirementType" onchange="updateField('requirementType', this.value)">
+                                <option value="">Select...</option>
+                                <option value="Always Required" ${prov.requirementType === 'Always Required' ? 'selected' : ''}>Always Required (All Forms)</option>
+                                <option value="Required in LENDER Form" ${prov.requirementType === 'Required in LENDER Form' ? 'selected' : ''}>Required in LENDER Form</option>
+                                <option value="Recommended but Optional" ${prov.requirementType === 'Recommended but Optional' ? 'selected' : ''}>Recommended but Optional</option>
+                                <option value="Discretionary" ${prov.requirementType === 'Discretionary' ? 'selected' : ''}>Discretionary (Reviewer Decides)</option>
+                                <option value="Conditional" ${prov.requirementType === 'Conditional' ? 'selected' : ''}>Conditional (Depends on Context)</option>
+                                <option value="Prohibited" ${prov.requirementType === 'Prohibited' ? 'selected' : ''}>Prohibited (Resist/Reject)</option>
+                            </select>
+                        </div>
+
+                        <div class="annotation-field">
+                            <label>Contextual Rules (If/Then Logic)</label>
+                            <textarea id="contextualRules" onchange="updateField('contextualRules', this.value)" placeholder="E.g., 'Required in LENDER Form and borrower NDAs. Discretion in Joinders and agent forms. Must include all 7 categories in LENDER Form; italicized categories required in other forms.'">${prov.contextualRules}</textarea>
+                        </div>
+
+                        <div class="annotation-field checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="businessDecisionFlag" ${prov.businessDecisionFlag ? 'checked' : ''} onchange="updateField('businessDecisionFlag', this.checked)">
+                                <label for="businessDecisionFlag">Business Decision Required</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="needsBankerInput" ${prov.needsBankerInput ? 'checked' : ''} onchange="updateField('needsBankerInput', this.checked)">
+                                <label for="needsBankerInput">Needs Banker Input</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="escalationRequired" ${prov.escalationRequired ? 'checked' : ''} onchange="updateField('escalationRequired', this.checked)">
+                                <label for="escalationRequired">Escalation May Be Required</label>
+                            </div>
+                        </div>
+
+                        ${prov.escalationRequired ? `
+                        <div class="annotation-field">
+                            <label>Escalation Path</label>
+                            <textarea id="escalationPath" onchange="updateField('escalationPath', this.value)" placeholder="E.g., 'If cannot negotiate carve-out: LOB Counsel → Business Lead + Deputy GC → Chief Legal Officer if both supportive'">${prov.escalationPath}</textarea>
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    <div>
+                        <div class="business-rules">
+                            <h4>Business Rules (Stratum-Style Logic)</h4>
+                            <div id="businessRulesList"></div>
+                            <div class="add-rule">
+                                <select id="ruleType">
+                                    <option value="required">Required</option>
+                                    <option value="conditional">Conditional</option>
+                                    <option value="discretion">Discretion</option>
+                                    <option value="business">Business Input</option>
+                                </select>
+                                <input type="text" id="ruleText" placeholder="E.g., 'If California law: must include judicial reference provision'">
+                                <button class="btn" onclick="addBusinessRule()">Add Rule</button>
+                            </div>
+                        </div>
+
+                        <div class="stratum-examples">
+                            <h4>Stratum Guidance Reference</h4>
+                            <textarea id="stratumNotes" onchange="updateField('stratumNotes', this.value)" placeholder="Copy relevant guidance from Stratum doc here for reference...">${prov.stratumNotes}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-buttons">
+                    <button class="btn" onclick="prevProvision()" ${currentIndex === 0 ? 'disabled' : ''}>← Previous</button>
+                    <button class="btn btn-secondary" onclick="nextProvision()" ${currentIndex === provisions.length - 1 ? 'disabled' : ''}>Next →</button>
+                </div>
+            </div>
+        `;
+
+        renderBusinessRules();
+        updateStats();
+    }
+
+    function renderBusinessRules() {
+        const prov = annotations[currentIndex];
+        const list = document.getElementById('businessRulesList');
+        
+        if (prov.businessRules.length === 0) {
+            list.innerHTML = '<p style="color: #a0aec0; font-size: 12px; margin: 10px 0;">No business rules added yet</p>';
+            return;
+        }
+
+        list.innerHTML = prov.businessRules.map((rule, idx) => `
+            <div class="rule-item">
+                <div class="rule-text">
+                    <span class="rule-type rule-${rule.type}">${rule.type.toUpperCase()}</span>
+                    ${rule.text}
+                </div>
+                <button class="btn btn-danger" style="padding: 4px 8px; font-size: 11px;" onclick="deleteRule(${idx})">×</button>
+            </div>
+        `).join('');
+    }
+
+    function updateField(field, value) {
+        annotations[currentIndex][field] = value;
+        if (field === 'escalationRequired' && !value) {
+            annotations[currentIndex].escalationPath = '';
+        }
+        if (field === 'escalationRequired') {
+            renderProvision();
+        }
+        updateStats();
+    }
+
+    function addBusinessRule() {
+        const type = document.getElementById('ruleType').value;
+        const text = document.getElementById('ruleText').value.trim();
+        
+        if (!text) {
+            alert('Please enter a rule description');
+            return;
+        }
+
+        annotations[currentIndex].businessRules.push({ type, text });
+        document.getElementById('ruleText').value = '';
+        renderBusinessRules();
+        updateStats();
+    }
+
+    function deleteRule(idx) {
+        annotations[currentIndex].businessRules.splice(idx, 1);
+        renderBusinessRules();
+        updateStats();
+    }
+
+    function nextProvision() {
+        if (currentIndex < provisions.length - 1) {
+            currentIndex++;
+            renderProvision();
+        }
+    }
+
+    function prevProvision() {
+        if (currentIndex > 0) {
+            currentIndex--;
+            renderProvision();
+        }
+    }
+
+    function updateStats() {
+        const annotated = annotations.filter(a => a.requirementType).length;
+        const withRules = annotations.filter(a => a.businessRules.length > 0).length;
+        const escalation = annotations.filter(a => a.escalationRequired).length;
+        const bankerInput = annotations.filter(a => a.needsBankerInput).length;
+
+        document.getElementById('totalAnnotated').textContent = annotated;
+        document.getElementById('withBusinessRules').textContent = withRules;
+        document.getElementById('requireEscalation').textContent = escalation;
+        document.getElementById('needBankerInput').textContent = bankerInput;
+    }
+
+    function loadStratumExample() {
+        // Load example from Stratum doc for regulatory disclosure
+        annotations[currentIndex] = {
+            ...annotations[currentIndex],
+            requirementType: 'Always Required',
+            contextualRules: 'Required in all agreements (LENDER Form, borrower NDAs, Joinders, agent forms, access letters). Must permit disclosure to regulators without notice.',
+            businessDecisionFlag: false,
+            needsBankerInput: false,
+            escalationRequired: true,
+            escalationPath: 'Any limitations on regulatory disclosure without notice must escalate to Chief Legal Officer and Chief Administrative Officer. Non-negotiable per FRB SR 07-19.',
+            businessRules: [
+                { type: 'required', text: 'Must use "required" not "compelled" (or both)' },
+                { type: 'required', text: 'Notice to customer conditioned on "if permitted by law/regulation"' },
+                { type: 'required', text: 'No advance notice required for bank examiners' },
+                { type: 'conditional', text: 'If "compelled" only: insert "or required"' },
+                { type: 'discretion', text: 'Prefer "as soon as reasonably practicable" over "prompt" but latter acceptable' }
+            ],
+            stratumNotes: 'FRB Supervisory Letter SR 07-19: Cannot restrict disclosure to Federal Reserve supervisory staff or require notice of such disclosure. Any exceptions must escalate to CLO/CAO. Critical for compliance.'
+        };
+        renderProvision();
+    }
+
+    function clearCurrent() {
+        if (!confirm('Clear all annotations for this provision?')) return;
+        
+        annotations[currentIndex] = {
+            ...provisions[currentIndex],
+            requirementType: '',
+            contextualRules: '',
+            businessDecisionFlag: false,
+            needsBankerInput: false,
+            escalationRequired: false,
+            escalationPath: '',
+            businessRules: [],
+            stratumNotes: ''
+        };
+        renderProvision();
+    }
+
+    function exportAnnotations() {
+        const headers = [
+            'Provision ID', 'Provision Name', 'Category', 'Severity',
+            'Requirement Type', 'Contextual Rules', 'Business Decision?',
+            'Needs Banker Input?', 'Escalation Required?', 'Escalation Path',
+            'Business Rules Count', 'Business Rules Detail', 'Stratum Notes'
+        ];
+
+        const rows = annotations.map(a => [
+            a.id,
+            a.name,
+            a.category,
+            a.severity,
+            a.requirementType,
+            a.contextualRules,
+            a.businessDecisionFlag ? 'Yes' : 'No',
+            a.needsBankerInput ? 'Yes' : 'No',
+            a.escalationRequired ? 'Yes' : 'No',
+            a.escalationPath,
+            a.businessRules.length,
+            a.businessRules.map(r => `[${r.type.toUpperCase()}] ${r.text}`).join(' | '),
+            a.stratumNotes
+        ]);
+
+        const csvContent = [
+            headers.join(','),
+            ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ConfiDoc_Annotated_Benchmarks_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+
+    renderProvision();
+</script>
+
+
+</body>
+</html>
