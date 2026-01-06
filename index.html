@@ -1,145 +1,508 @@
-<!doctype html>
+<html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Concordïa NDA+ — Task Pane Mockup</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPY MAP - CLASSIFIED</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono:wght@400&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background: #000;
+            color: #00ff00;
+            overflow: hidden;
+            user-select: none;
+        }
+        
+        .terminal-header {
+            background: #111;
+            border-bottom: 2px solid #00ff00;
+            padding: 10px;
+            font-size: 14px;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+        
+        .status-bar {
+            display: flex;
+            gap: 20px;
+            margin-left: auto;
+        }
+        
+        .container {
+            height: calc(100vh - 60px);
+            display: flex;
+            position: relative;
+        }
+        
+        .sidebar {
+            width: 300px;
+            background: #111;
+            border-right: 2px solid #00ff00;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .map-area {
+            flex: 1;
+            position: relative;
+            background: #000;
+            overflow: hidden;
+        }
+        
+        .building {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.5s ease;
+        }
+        
+        .floor {
+            border: 2px solid #00ff00;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .room {
+            border: 1px solid #00aa00;
+            position: absolute;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(0, 255, 0, 0.05);
+        }
+        
+        .room:hover {
+            background: rgba(0, 255, 0, 0.15);
+            border-color: #00ff00;
+        }
+        
+        .room-label {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            font-size: 8px;
+            pointer-events: none;
+        }
+        
+        .furniture {
+            position: absolute;
+            border: 1px solid #008800;
+            background: rgba(0, 170, 0, 0.3);
+        }
+        
+        .zoom-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .zoom-btn {
+            width: 30px;
+            height: 30px;
+            background: #111;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 16px;
+        }
+        
+        .zoom-btn:hover {
+            background: #00ff00;
+            color: #000;
+        }
+        
+        .info-panel {
+            margin-bottom: 20px;
+        }
+        
+        .info-title {
+            color: #00ff00;
+            border-bottom: 1px solid #00aa00;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+        
+        .info-item {
+            font-size: 10px;
+            margin-bottom: 5px;
+            color: #00aa00;
+        }
+        
+        .blink {
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.1;
+            background-image: 
+                linear-gradient(rgba(0, 255, 0, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 0, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        .selected-room {
+            border: 2px solid #00ff00 !important;
+            background: rgba(0, 255, 0, 0.2) !important;
+        }
+        
+        .coordinates {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            font-size: 10px;
+            color: #008800;
+        }
+    </style>
 </head>
 <body>
-  <div class="pane">
-    <header class="header">
-      <img src="assets/logo.jpeg" alt="NDA+ Concordïa" class="logo">
-    </header>
-
-    <div class="toolbar">
-      <button id="analyzeBtn" class="btn primary">Analyze</button>
-      <div id="analyzeStatus" class="status">Ready</div>
+    <div class="terminal-header">
+        <span>MANDATUM INTELLIGENCE SYSTEM v2.1 - <span class="blink">CLASSIFIED</span></span>
+        <div class="status-bar">
+            <span>ZOOM: <span id="zoom-level">100%</span></span>
+            <span>TARGET: BUILDING-7</span>
+            <span>STATUS: ACTIVE</span>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="sidebar">
+            <div class="info-panel">
+                <div class="info-title">MISSION BRIEFING</div>
+                <div class="info-item">TARGET: CLASSIFIED FACILITY</div>
+                <div class="info-item">FLOORS: 3</div>
+                <div class="info-item">ROOMS: 12</div>
+                <div class="info-item">SECURITY: HIGH</div>
+            </div>
+            
+            <div class="info-panel">
+                <div class="info-title">ROOM ANALYSIS</div>
+                <div id="room-info">
+                    <div class="info-item">CLICK ROOM TO ANALYZE</div>
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <div class="info-title">LEGEND</div>
+                <div class="info-item">█ WALLS</div>
+                <div class="info-item">▬ DOORS</div>
+                <div class="info-item">▪ FURNITURE</div>
+                <div class="info-item">● OBJECTS</div>
+            </div>
+            
+            <div class="info-panel">
+                <div class="info-title">CONTROLS</div>
+                <div class="info-item">CLICK: SELECT ROOM</div>
+                <div class="info-item">+/-: ZOOM IN/OUT</div>
+                <div class="info-item">MOUSE: PAN VIEW</div>
+            </div>
+        </div>
+        
+        <div class="map-area">
+            <div class="grid"></div>
+            <div class="coordinates" id="coordinates">X: 0, Y: 0</div>
+            
+            <div class="zoom-controls">
+                <button class="zoom-btn" onclick="zoomIn()">+</button>
+                <button class="zoom-btn" onclick="zoomOut()">-</button>
+                <button class="zoom-btn" onclick="resetView()">⌂</button>
+            </div>
+            
+            <div class="building" id="building">
+                <!-- Floor 3 -->
+                <div class="floor" style="width: 400px; height: 150px;">
+                    <div class="room" data-room="server-room" style="width: 120px; height: 80px; top: 10px; left: 10px;">
+                        <div class="room-label">SERVER</div>
+                        <div class="furniture" style="width: 20px; height: 15px; top: 20px; left: 20px;"></div>
+                        <div class="furniture" style="width: 20px; height: 15px; top: 20px; left: 50px;"></div>
+                        <div class="furniture" style="width: 20px; height: 15px; top: 40px; left: 20px;"></div>
+                    </div>
+                    <div class="room" data-room="control-room" style="width: 100px; height: 80px; top: 10px; left: 140px;">
+                        <div class="room-label">CONTROL</div>
+                        <div class="furniture" style="width: 40px; height: 10px; top: 30px; left: 30px;"></div>
+                        <div class="furniture" style="width: 8px; height: 8px; top: 45px; left: 35px; border-radius: 50%;"></div>
+                    </div>
+                    <div class="room" data-room="security" style="width: 140px; height: 50px; top: 100px; left: 10px;">
+                        <div class="room-label">SECURITY</div>
+                        <div class="furniture" style="width: 30px; height: 8px; top: 15px; left: 10px;"></div>
+                        <div class="furniture" style="width: 30px; height: 8px; top: 15px; left: 50px;"></div>
+                    </div>
+                </div>
+                
+                <!-- Floor 2 -->
+                <div class="floor" style="width: 400px; height: 200px; margin-top: 20px;">
+                    <div class="room" data-room="office-a" style="width: 90px; height: 70px; top: 10px; left: 10px;">
+                        <div class="room-label">OFFICE-A</div>
+                        <div class="furniture" style="width: 25px; height: 15px; top: 20px; left: 20px;"></div>
+                        <div class="furniture" style="width: 8px; height: 8px; top: 40px; left: 25px; border-radius: 50%;"></div>
+                    </div>
+                    <div class="room" data-room="conference" style="width: 120px; height: 70px; top: 10px; left: 110px;">
+                        <div class="room-label">CONFERENCE</div>
+                        <div class="furniture" style="width: 60px; height: 20px; top: 25px; left: 30px;"></div>
+                        <div class="furniture" style="width: 6px; height: 6px; top: 15px; left: 45px; border-radius: 50%;"></div>
+                        <div class="furniture" style="width: 6px; height: 6px; top: 40px; left: 35px; border-radius: 50%;"></div>
+                    </div>
+                    <div class="room" data-room="office-b" style="width: 90px; height: 70px; top: 10px; left: 240px;">
+                        <div class="room-label">OFFICE-B</div>
+                        <div class="furniture" style="width: 25px; height: 15px; top: 20px; left: 20px;"></div>
+                    </div>
+                    <div class="room" data-room="archive" style="width: 180px; height: 110px; top: 90px; left: 10px;">
+                        <div class="room-label">ARCHIVE</div>
+                        <div class="furniture" style="width: 15px; height: 40px; top: 20px; left: 20px;"></div>
+                        <div class="furniture" style="width: 15px; height: 40px; top: 20px; left: 40px;"></div>
+                        <div class="furniture" style="width: 15px; height: 40px; top: 20px; left: 60px;"></div>
+                    </div>
+                    <div class="room" data-room="vault" style="width: 140px; height: 110px; top: 90px; left: 200px;">
+                        <div class="room-label">VAULT</div>
+                        <div class="furniture" style="width: 20px; height: 30px; top: 30px; left: 30px;"></div>
+                        <div class="furniture" style="width: 20px; height: 30px; top: 30px; left: 60px;"></div>
+                    </div>
+                </div>
+                
+                <!-- Floor 1 -->
+                <div class="floor" style="width: 400px; height: 150px; margin-top: 20px;">
+                    <div class="room" data-room="lobby" style="width: 150px; height: 60px; top: 10px; left: 10px;">
+                        <div class="room-label">LOBBY</div>
+                        <div class="furniture" style="width: 40px; height: 8px; top: 25px; left: 55px;"></div>
+                        <div class="furniture" style="width: 8px; height: 8px; top: 15px; left: 20px; border-radius: 50%;"></div>
+                        <div class="furniture" style="width: 8px; height: 8px; top: 15px; left: 120px; border-radius: 50%;"></div>
+                    </div>
+                    <div class="room" data-room="reception" style="width: 100px; height: 60px; top: 10px; left: 170px;">
+                        <div class="room-label">RECEPTION</div>
+                        <div class="furniture" style="width: 30px; height: 10px; top: 25px; left: 35px;"></div>
+                    </div>
+                    <div class="room" data-room="cafeteria" style="width: 250px; height: 70px; top: 80px; left: 10px;">
+                        <div class="room-label">CAFETERIA</div>
+                        <div class="furniture" style="width: 20px; height: 20px; top: 20px; left: 30px;"></div>
+                        <div class="furniture" style="width: 20px; height: 20px; top: 20px; left: 60px;"></div>
+                        <div class="furniture" style="width: 20px; height: 20px; top: 20px; left: 90px;"></div>
+                        <div class="furniture" style="width: 80px; height: 15px; top: 45px; left: 140px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <section class="summary card">
-      <div class="summary-row">
-        <span class="chip good">✓ 12 aligned</span>
-        <span class="chip warn">⚠ 3 flagged</span>
-        <span class="chip miss">✖ 2 missing</span>
-      </div>
-      <div class="batch">
-        <button class="btn ghost" id="batchMin">Min → Flagged</button>
-        <button class="btn ghost" id="batchBench">Benchmark → Eligible</button>
-      </div>
-    </section>
+    <script>
+        let currentZoom = 1;
+        let selectedRoom = null;
+        let isDragging = false;
+        let dragStart = { x: 0, y: 0 };
+        let buildingPosition = { x: 0, y: 0 };
 
-    <section class="provisions">
-      <!-- Provision: Term & Duration (Flagged) -->
-      <article class="prov card" data-id="NDA-TERM-01" data-required="true">
-        <div class="prov-header">
-          <div class="title"><span class="status-icon warn">⚠</span> Term &amp; Duration</div>
-          <div class="decision-check" aria-label="decision state"></div>
-        </div>
-        <div class="actions">
-          <button class="btn mini ghost view">View</button>
-          <button class="btn mini" data-choice="min">Min Req</button>
-          <button class="btn mini" data-choice="benchmark">Benchmark</button>
-          <button class="btn mini ghost custom">Custom</button>
-        </div>
-        <div class="drawer">
-          <div class="tabs">
-            <button class="tab active" data-tab="found">Found</button>
-            <button class="tab" data-tab="proposed">Proposed</button>
-          </div>
-          <div class="pane found">
-            <pre class="snippet">“… shall continue for five (5) years after the Effective Date …”</pre>
-          </div>
-          <div class="pane proposed" hidden>
-            <pre class="snippet proposed-text">“… shall terminate two (2) years after the last disclosure of Confidential Information …”</pre>
-            <button class="btn mini use-proposed">Use proposed</button>
-          </div>
-        </div>
-        <div class="custom-area" hidden>
-          <textarea placeholder="Enter custom clause…"></textarea>
-          <div class="custom-actions">
-            <button class="btn mini save-custom">Save Custom</button>
-            <span class="validation" aria-live="polite"></span>
-          </div>
-        </div>
-      </article>
+        const building = document.getElementById('building');
+        const zoomLevelDisplay = document.getElementById('zoom-level');
+        const coordinates = document.getElementById('coordinates');
+        const roomInfo = document.getElementById('room-info');
 
-      <!-- Provision: Confidential Information (Aligned) -->
-      <article class="prov card" data-id="NDA-CONF-01">
-        <div class="prov-header">
-          <div class="title"><span class="status-icon good">✓</span> Confidential Information</div>
-          <div class="decision-check decided" title="Aligned"></div>
-        </div>
-        <div class="actions">
-          <button class="btn mini ghost view">View</button>
-          <button class="btn mini" data-choice="min">Min Req</button>
-          <button class="btn mini" data-choice="benchmark">Benchmark</button>
-          <button class="btn mini ghost custom">Custom</button>
-        </div>
-        <div class="drawer" hidden>
-          <div class="tabs">
-            <button class="tab active" data-tab="found">Found</button>
-            <button class="tab" data-tab="proposed">Proposed</button>
-          </div>
-          <div class="pane found">
-            <pre class="snippet">“… includes business plans, financials, technical data, and any oral disclosures confirmed in writing within 30 days …”</pre>
-          </div>
-          <div class="pane proposed" hidden>
-            <pre class="snippet proposed-text">Aligned with benchmark.</pre>
-            <button class="btn mini use-proposed">Use proposed</button>
-          </div>
-        </div>
-        <div class="custom-area" hidden>
-          <textarea placeholder="Enter custom clause…"></textarea>
-          <div class="custom-actions">
-            <button class="btn mini save-custom">Save Custom</button>
-            <span class="validation" aria-live="polite"></span>
-          </div>
-        </div>
-      </article>
+        const roomData = {
+            'server-room': {
+                name: 'SERVER ROOM',
+                items: ['MAINFRAME SERVERS', 'COOLING UNITS', 'BACKUP DRIVES', 'SECURITY TERMINAL'],
+                security: 'MAXIMUM',
+                access: 'KEYCARD REQUIRED'
+            },
+            'control-room': {
+                name: 'CONTROL ROOM',
+                items: ['MONITORING STATION', 'COMMUNICATIONS', 'ALERT SYSTEM'],
+                security: 'HIGH',
+                access: 'AUTHORIZED ONLY'
+            },
+            'security': {
+                name: 'SECURITY OFFICE',
+                items: ['CCTV MONITORS', 'WEAPON LOCKER', 'GUARD STATION'],
+                security: 'HIGH',
+                access: 'SECURITY CLEARANCE'
+            },
+            'office-a': {
+                name: 'OFFICE A',
+                items: ['DESK', 'COMPUTER', 'FILE CABINET', 'CHAIR'],
+                security: 'MEDIUM',
+                access: 'EMPLOYEE BADGE'
+            },
+            'conference': {
+                name: 'CONFERENCE ROOM',
+                items: ['CONFERENCE TABLE', 'PROJECTOR', 'CHAIRS', 'WHITEBOARD'],
+                security: 'LOW',
+                access: 'GENERAL'
+            },
+            'office-b': {
+                name: 'OFFICE B',
+                items: ['EXECUTIVE DESK', 'SAFE', 'BOOKSHELF'],
+                security: 'HIGH',
+                access: 'EXECUTIVE ONLY'
+            },
+            'archive': {
+                name: 'ARCHIVE',
+                items: ['DOCUMENT SHELVES', 'CLIMATE CONTROL', 'FILING SYSTEMS'],
+                security: 'MEDIUM',
+                access: 'AUTHORIZED PERSONNEL'
+            },
+            'vault': {
+                name: 'VAULT',
+                items: ['SECURITY DEPOSIT BOXES', 'REINFORCED WALLS', 'TIME LOCK'],
+                security: 'MAXIMUM',
+                access: 'DUAL AUTHORIZATION'
+            },
+            'lobby': {
+                name: 'LOBBY',
+                items: ['RECEPTION DESK', 'SEATING AREA', 'SECURITY CHECKPOINT'],
+                security: 'LOW',
+                access: 'PUBLIC'
+            },
+            'reception': {
+                name: 'RECEPTION',
+                items: ['FRONT DESK', 'VISITOR LOG', 'PHONE SYSTEM'],
+                security: 'LOW',
+                access: 'PUBLIC'
+            },
+            'cafeteria': {
+                name: 'CAFETERIA',
+                items: ['DINING TABLES', 'VENDING MACHINES', 'KITCHEN COUNTER'],
+                security: 'LOW',
+                access: 'EMPLOYEE'
+            }
+        };
 
-      <!-- Provision: Return/Destroy (Missing) -->
-      <article class="prov card" data-id="NDA-RETURN-01" data-required="true">
-        <div class="prov-header">
-          <div class="title"><span class="status-icon miss">✖</span> Return / Destroy</div>
-          <div class="decision-check" aria-label="decision state"></div>
-        </div>
-        <div class="actions">
-          <button class="btn mini ghost view">View</button>
-          <button class="btn mini" data-choice="min">Min Req</button>
-          <button class="btn mini" data-choice="benchmark">Benchmark</button>
-          <button class="btn mini ghost custom">Custom</button>
-        </div>
-        <div class="drawer">
-          <div class="tabs">
-            <button class="tab active" data-tab="found">Found</button>
-            <button class="tab" data-tab="proposed">Proposed</button>
-          </div>
-          <div class="pane found">
-            <pre class="snippet">No explicit return/destroy obligation detected.</pre>
-          </div>
-          <div class="pane proposed" hidden>
-            <pre class="snippet proposed-text">“Upon request or termination, Recipient shall promptly return or securely destroy all Confidential Information …”</pre>
-            <button class="btn mini use-proposed">Use proposed</button>
-          </div>
-        </div>
-        <div class="custom-area" hidden>
-          <textarea placeholder="Enter custom clause…"></textarea>
-          <div class="custom-actions">
-            <button class="btn mini save-custom">Save Custom</button>
-            <span class="validation" aria-live="polite"></span>
-          </div>
-        </div>
-      </article>
-    </section>
+        // Room click handler
+        document.querySelectorAll('.room').forEach(room => {
+            room.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectRoom(room);
+            });
+        });
 
-    <footer class="footer">
-      <button id="applyBtn" class="btn apply" disabled>Apply Changes</button>
-      <button id="exportBtn" class="btn ghost">Export Summary</button>
-      <div class="meta">v1.0 • Connected to Concordïa Core</div>
-    </footer>
-  </div>
+        function selectRoom(room) {
+            // Remove previous selection
+            if (selectedRoom) {
+                selectedRoom.classList.remove('selected-room');
+            }
+            
+            // Select new room
+            selectedRoom = room;
+            room.classList.add('selected-room');
+            
+            // Update info panel
+            const roomId = room.dataset.room;
+            const data = roomData[roomId];
+            
+            if (data) {
+                roomInfo.innerHTML = `
+                    <div class="info-item">ROOM: ${data.name}</div>
+                    <div class="info-item">SECURITY: ${data.security}</div>
+                    <div class="info-item">ACCESS: ${data.access}</div>
+                    <div class="info-item" style="margin-top: 10px;">CONTENTS:</div>
+                    ${data.items.map(item => `<div class="info-item">- ${item}</div>`).join('')}
+                `;
+            }
+        }
 
-  <script src="app.js"></script>
+        // Zoom functions
+        function zoomIn() {
+            currentZoom = Math.min(currentZoom * 1.5, 5);
+            updateZoom();
+        }
+
+        function zoomOut() {
+            currentZoom = Math.max(currentZoom / 1.5, 0.5);
+            updateZoom();
+        }
+
+        function resetView() {
+            currentZoom = 1;
+            buildingPosition = { x: 0, y: 0 };
+            updateZoom();
+            updatePosition();
+        }
+
+        function updateZoom() {
+            building.style.transform = `translate(${-50 + buildingPosition.x}%, ${-50 + buildingPosition.y}%) scale(${currentZoom})`;
+            zoomLevelDisplay.textContent = Math.round(currentZoom * 100) + '%';
+        }
+
+        function updatePosition() {
+            building.style.transform = `translate(${-50 + buildingPosition.x}%, ${-50 + buildingPosition.y}%) scale(${currentZoom})`;
+        }
+
+        // Mouse tracking for coordinates
+        document.querySelector('.map-area').addEventListener('mousemove', (e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = Math.round((e.clientX - rect.left) / currentZoom);
+            const y = Math.round((e.clientY - rect.top) / currentZoom);
+            coordinates.textContent = `X: ${x}, Y: ${y}`;
+        });
+
+        // Drag functionality
+        document.querySelector('.map-area').addEventListener('mousedown', (e) => {
+            if (e.target.closest('.room') || e.target.closest('.zoom-controls')) return;
+            isDragging = true;
+            dragStart.x = e.clientX;
+            dragStart.y = e.clientY;
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            
+            const deltaX = (e.clientX - dragStart.x) * 0.1;
+            const deltaY = (e.clientY - dragStart.y) * 0.1;
+            
+            buildingPosition.x += deltaX;
+            buildingPosition.y += deltaY;
+            
+            updatePosition();
+            
+            dragStart.x = e.clientX;
+            dragStart.y = e.clientY;
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case '+':
+                case '=':
+                    zoomIn();
+                    break;
+                case '-':
+                    zoomOut();
+                    break;
+                case 'r':
+                case 'R':
+                    resetView();
+                    break;
+            }
+        });
+
+        // Initialize
+        updateZoom();
+    </script>
 </body>
 </html>
